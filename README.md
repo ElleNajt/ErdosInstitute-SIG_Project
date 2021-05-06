@@ -2,8 +2,9 @@
 Bootcamp Project For Erdos Institute
 
 
+# Files:
 
-
+RedditData.ipynb = Notebook for scraping reddit data.
 
 
 
