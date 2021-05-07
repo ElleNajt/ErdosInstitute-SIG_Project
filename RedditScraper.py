@@ -9,7 +9,6 @@ import pandas as pd
 import praw                   
 import re                     
 import datetime as dt
-import seaborn as sns
 import requests
 import json
 import sys
@@ -69,7 +68,8 @@ def extract_data(submission, comments = True):
     }
     
     content["total_awards"] = extract_num_rewards(content["awards"])
-    content["downs"] = (1 - content["upvote_ratio"]) * content["ups"] / content["upvote_ratio"]
+    #content["downs"] = (1 - content["upvote_ratio"]) * content["ups"] / content["upvote_ratio"]
+    #commenting this out because there can be a divide by zero error, when the ratio is 0.
     return content
 
 '''
