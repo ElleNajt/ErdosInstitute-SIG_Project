@@ -53,7 +53,7 @@ def extract_data(submission, comments = True):
     content = {
     "title" : submission.title,
     "self" : submission.is_self,
-    #"text" : submission.selftext,
+    "text" : submission.selftext,
     #"comments" : postlist,
     "author" : submission.author,
     "name" : submission.name,
