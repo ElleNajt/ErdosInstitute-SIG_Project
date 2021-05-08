@@ -6,8 +6,7 @@ Bootcamp Project For Erdos Institute
 
 RedditData.ipynb = Notebook for scraping reddit data.
 
-
-
+The pickled dataframes where made with a python 3.8.6 build, with pandas version (?). (NB: Some of the files here where made on 3.6, this is only temporary.)
 
 
 # API Keys:
