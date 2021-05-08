@@ -63,6 +63,7 @@ def extract_data(submission, comments = False):
             postlist.append(post)
 
     content = vars(submission)
+    content["author"] = str(content["author"])
     content["total_awards"] = extract_num_rewards(content["all_awardings"])
     return content
 
