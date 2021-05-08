@@ -47,29 +47,23 @@ def extract_num_rewards(awardings_data):
     return sum( x["count"] for x in awardings_data)
 
 
-def extract_data(submission, comments = True):
+def extract_data(submission, comments = False):
     postlist = []
 
-    content = {
-    "title" : submission.title,
-    "self" : submission.is_self,
-    "text" : submission.selftext,
-    #"comments" : postlist,
-    "author" : submission.author,
-    "name" : submission.name,
-    "id" : submission.id,
-    "upvote_ratio" : submission.upvote_ratio,
-    "ups" : submission.score, #this is the same as submission.ups,
-    "downs" : None,
-    "awarders" : submission.awarders, 
-    "awards" : submission.all_awardings,
-    "total_awards" : None,
-    "url" : submission.url # Only relevent if not a self post
-    }
-    
-    content["total_awards"] = extract_num_rewards(content["awards"])
-    #content["downs"] = (1 - content["upvote_ratio"]) * content["ups"] / content["upvote_ratio"]
-    #commenting this out because there can be a divide by zero error, when the ratio is 0.
+    # extracts top level comments
+
+    if comments:
+        submission.comments.replace_more(limit=0)
+        for comment in submission.comments: 
+            post = {} # put this here
+            
+            post = vars(comment)
+
+
+            postlist.append(post)
+
+    content = vars(submission)
+    content["total_awards"] = extract_num_rewards(content["all_awardings"])
     return content
 
 '''
@@ -89,7 +83,7 @@ def get_all_submissions(start_time, end_time, subreddit):
         url = f"https://api.pushshift.io/reddit/submission/search/?after={start_time}&before={end}&sort_type=created_utc&sort=desc&subreddit={subreddit}&limit=1000"
 
         data = requests.get(url)
-        
+        #print(url)
         
         if data.headers['Content-Type'] == 'application/json; charset=UTF-8':
             data_json = data.json()
@@ -108,6 +102,19 @@ def get_all_submissions(start_time, end_time, subreddit):
     print("Getting the updated values.")
 
     # Based on this: https://www.reddit.com/r/redditdev/comments/aoe4pk/praw_getting_multiple_submissions_using_by_id/
+    
+    if len(df) == 0:
+        # WSB went private at a certain point, and I think this is responsible
+        # for no results being returned by pushshift
+        # can see this at 
+        #     start = dt.datetime(2021, 2,5)
+        # end = dt.datetime(2021, 2,7)
+        # Couldn't find any mention of it going private, but the daily post
+        # is missing: https://www.reddit.com/r/wallstreetbets/search/?q=What%20Are%20Your%20Moves%20Tomorrow%2C%20February%2007%2C%202021&restrict_sr=1
+        return pd.DataFrame() 
+        # return an empty data frame, otherwise pulling
+        # the id column gives an error 
+    
     ids2 = [i if i.startswith('t3_') else f't3_{i}' for i in list(df.id)]
 
     
@@ -124,7 +131,7 @@ def get_all_submissions(start_time, end_time, subreddit):
 new_start = True #False for picking up where it was left off
 if new_start == True:
     start = dt.datetime(2021, 1,1)
-    end = dt.datetime(2021, 5, 7)
+    end = dt.datetime(2021, 5,8)
     delta = dt.timedelta(days=1)
     window_left = start
     
