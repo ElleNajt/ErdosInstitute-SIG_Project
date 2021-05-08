@@ -5,6 +5,7 @@ Bootcamp Project For Erdos Institute
 # Files:
 
 RedditData.ipynb = Notebook for scraping reddit data.
+RedditScraper.py = Python script that scrapes reddit data. 
 
 The pickled dataframes where made with a python 3.8.6 build, with pandas version (?). (NB: Some of the files here were made on 3.6, this is only temporary.)
 
