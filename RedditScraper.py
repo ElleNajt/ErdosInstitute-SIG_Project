@@ -105,13 +105,12 @@ def get_all_submissions(start_time, end_time, subreddit):
     # Based on this: https://www.reddit.com/r/redditdev/comments/aoe4pk/praw_getting_multiple_submissions_using_by_id/
     
     if len(df) == 0:
-        # WSB went private at a certain point, and I think this is responsible
-        # for no results being returned by pushshift
+        # Pushshift ingestion went down, this creates gaps in the data: https://www.reddit.com/r/pushshift/comments/n38roy/missing_data/
         # can see this at 
         #     start = dt.datetime(2021, 2,5)
         # end = dt.datetime(2021, 2,7)
-        # Couldn't find any mention of it going private, but the daily post
-        # is missing: https://www.reddit.com/r/wallstreetbets/search/?q=What%20Are%20Your%20Moves%20Tomorrow%2C%20February%2007%2C%202021&restrict_sr=1
+        # The daily post on that day is missing: https://www.reddit.com/r/wallstreetbets/search/?q=What%20Are%20Your%20Moves%20Tomorrow%2C%20February%2007%2C%202021&restrict_sr=1
+        # idk what that means, maybe its just a coincidence or maybe the subreddit went private then ( wikipedia says they went private for a few hours late Jan)
         return pd.DataFrame() 
         # return an empty data frame, otherwise pulling
         # the id column gives an error 
