@@ -31,3 +31,9 @@ The pickled dataframes where made with a python 3.8.6 build. You also need to ha
 2. Some of the field names are counter intuitive, e.g. score actual refers to the number of upvotes: https://praw.readthedocs.io/en/latest/code_overview/models/submission.html
 3. Compared to the kaggle data here https://www.kaggle.com/gpreda/reddit-wallstreetsbets-posts/code , this dataset is missing about 9000 entries, but also has 500k+ entries from the overlapping time period that the kaggle data set does not have. See the end of the cleaning file for a comparison of the two.
 
+
+## Comparison with kaggle:
+
+There is a kaggle data set of scraped wsb data here:  https://www.kaggle.com/gpreda/reddit-wallstreetsbets-posts
+
+The key difference is that this appears ( by looking at the authors github https://github.com/gabrielpreda/reddit_extract_content )  to have been built by scraping reddit.new on a regular basis. This means that while it doesn't have the gaps that the pushshift data has, it is missing many entries. The file CompareToKaggle shows some of the differences between the two data sets.
