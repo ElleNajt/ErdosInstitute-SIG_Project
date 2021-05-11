@@ -1,7 +1,7 @@
 Exploratory Data Analysis:
 
-# Time series:
+## Time series:
 
-# Scatter / pair plots: 
+## Scatter / pair plots: 
 
-# NLP : 
+## NLP : 
