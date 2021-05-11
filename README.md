@@ -1,4 +1,4 @@
-# ErdosInstitute-SIG_Project
+# Erdos Institute SIG Project
 Bootcamp Project For Erdos Institute
 
 
