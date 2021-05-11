@@ -2,6 +2,10 @@ import pandas as pd
 import seaborn as sns
 import re
 import praw
+from matplotlib import pyplot as plt
+import numpy as np
+
+
 
 
 def sigmoid(x):
