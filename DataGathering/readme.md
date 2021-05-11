@@ -5,8 +5,25 @@ This folder stores the scripts used to gather data.
 2. At the end of RedditScraper, we have a dataframe where each column is the dictionary of the variables of the submission object of every submission found by pushshift's search API.
 3. CleaningRedditData.ipynb is then used to remove uninteresting fields, and convert others to usable formats, for instance by extracting text from the html code of a text submission using beautifulsoup, or by converting timestamps into readable UTC datetimes.
 
+## API Keys:
+
+To use this, you need an "API.env" file formatted like:
+
+```
+reddit_client_id = "your reddit API id"
+reddit_client_secret = "your reddit API secret key" 
+user_agent = "your user agent"
+```
+
+in the same folder as RedditScraper.py .
+
+.env files are in the gitignore.
+
+
 ## Data:
 The result of running this pipeline on /r/wallstreetbets between Jan 1 2021 and May 7 2021 is stored here: https://drive.google.com/file/d/1fcrXvG7tF-Fzv8xMREQz4N7a_Am2E9QB/view
+
+The pickled dataframes where made with a python 3.8.6 build. You also need to have praw version 7.2.0 for the dataframes to unpickle without an error.
 
 ## Caveats:
 
