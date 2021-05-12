@@ -25,6 +25,8 @@ The result of running this pipeline on /r/wallstreetbets between Jan 1 2021 and 
 
 The pickled dataframes where made with a python 3.8.6 build. You also need to have praw version 7.2.0 for the dataframes to unpickle without an error.
 
+There is also a csv version here: https://drive.google.com/file/d/1-hiZVtO-nEwi92F9FbOwTbkvOFNLC3Tj/view?usp=sharing
+
 ## Caveats:
 
 1. Pushshift's ingest went down for various periods of time, and hasn't been backfilled. This leads to some gaps in the data that are apparent one plots a time series. See here for discussion: https://www.reddit.com/r/pushshift/comments/n38roy/missing_data/
