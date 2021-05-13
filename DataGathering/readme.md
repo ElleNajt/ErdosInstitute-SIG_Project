@@ -21,7 +21,7 @@ in the same folder as RedditScraper.py .
 
 
 ## Data:
-The result of running this pipeline on /r/wallstreetbets between Jan 1 2021 and May 7 2021 is stored here: https://drive.google.com/file/d/1fcrXvG7tF-Fzv8xMREQz4N7a_Am2E9QB/view
+The result of running this pipeline on /r/wallstreetbets between Jan 1 2020 and May 7 2021 is stored here: https://drive.google.com/file/d/1fcrXvG7tF-Fzv8xMREQz4N7a_Am2E9QB/view
 
 The pickled dataframes where made with a python 3.8.6 build. You also need to have praw version 7.2.0 for the dataframes to unpickle without an error.
 
