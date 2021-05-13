@@ -30,7 +30,7 @@ There is also a csv version here: https://drive.google.com/file/d/1-hiZVtO-nEwi9
 ## Caveats:
 
 1. Pushshift's ingest went down for various periods of time, and hasn't been backfilled. This leads to some gaps in the data that are apparent one plots a time series. See here for discussion: https://www.reddit.com/r/pushshift/comments/n38roy/missing_data/
-2. Some of the field names are counter intuitive, e.g. score actual refers to the number of upvotes: https://praw.readthedocs.io/en/latest/code_overview/models/submission.html
+2. Some of the field names are counter intuitive, e.g. score actual refers to the number of upvotes (edit: actually possibly not, comparing to posts on reddit...): https://praw.readthedocs.io/en/latest/code_overview/models/submission.html
 3. Compared to the kaggle data here https://www.kaggle.com/gpreda/reddit-wallstreetsbets-posts/code , this dataset is missing about 9000 entries, but also has 500k+ entries from the overlapping time period that the kaggle data set does not have. See the end of the cleaning file for a comparison of the two.
 
 
