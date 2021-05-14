@@ -1,0 +1,1 @@
+If we wanted to do any custom preprocessing, e.g. decode a non-standard encoding, lowercase, remove numbers, extract named entities… All of this can be done inside the MyCorpus iterator and word2vec doesn’t need to know. All that is required is that the input yields one sentence (list of utf8 words) after another.
