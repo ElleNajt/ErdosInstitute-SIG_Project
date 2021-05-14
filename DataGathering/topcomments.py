@@ -39,9 +39,10 @@ comments = []
 for i, submission_id in enumerate(ids):
     #print(f"Retrieving from entry {i}, with id {submission_id}")
     submission = reddit.submission(id = submission_id)
-    submission.comments.replace_more(limit=None)
+    #submission.comments.replace_more(limit=None)
 
-    for comment in submission.comments.list():
+    #for comment in submission.comments.list():
+    for comment in submission.comments:
         comments.append(vars(comment))
 
 comments_df = pd.DataFrame(comments)
