@@ -13,7 +13,16 @@ import pandas as pd
 import itertools
 from scipy.stats import powerlaw
 
+import re
+import nltk
 
+
+#import networkx as nx
+import gensim.models
+#import numba 
+import numpy as np
+
+import sklearn 
 
 
 class author_influence:
@@ -71,3 +80,93 @@ class author_influence:
         merged = merged.fillna( {"popularity_aggregate" : self.global_params})
         
         return merged
+    
+    
+    
+    
+#########Word2Vec stuff:
+    
+    
+def similarity(vec_1, vec_2):
+    return sklearn.metrics.pairwise.cosine_similarity([vec_1], [vec_2])[0]
+
+def make_similarity_col(df, given_index):
+    given_vector = df['avg_vector'][given_index] 
+    df['similarity'] = df['avg_vector'].apply( lambda x : similarity(x, given_vector))
+    
+def sims(args, model):
+    for word, sim in model.wv.most_similar(**args, topn = 10):
+        print( f"{word} - similarity {sim}")
+
+######################
+
+
+
+
+class tokenization:
+    
+    def __init__(self):
+        
+        self.regex = re.compile('[^a-zA-Z ]')
+
+        return self
+    
+    def tokenize(self, text):
+    # given a body of text, this splits into sentences, then processes each word in the sentence to remove
+    # non alphabetical characters... (? bad idea, what about users with numbers in their name)
+    # returns it as a list of lists of words, the format desired by gensims word2vec
+
+        sentences = []
+        if type(text) == str:
+            for sentence in nltk.tokenize.sent_tokenize(text):
+                processed = [self.regex.sub('', word.lower()) for word in sentence.split(' ') ]
+                processed = [word for word in processed if word not in set( ['' ])]
+                sentences.append(processed)
+        return sentences
+
+    
+    
+    def fit_transform(self, df):
+    
+        df['tokenized_title'] = df.title.apply(self.tokenize)
+        df['tokenized_selftext'] = df.selftext.apply(self.tokenize)
+
+        return df
+    
+class word2vec:
+    
+    
+    def __init__(self, model_kind = gensim.models.Word2Vec):
+        # other options  gensim.models.FastText
+        
+        self.model_kind = model_kind
+        self.model = None
+        
+        
+    def average_vector(self, text):
+        present_keys = [x for x in text if x in self.model.wv.key_to_index ]
+        if not present_keys:
+            return np.zeros( self.model.wv.vector_size)
+        return sum( [self.model.wv[x] for x in present_keys] ) /len(present_keys)
+
+    def average_vector_paragraph(self, text):
+        if text == []:
+            return np.zeros( self.model.wv.vector_size)
+        return sum( self.average_vector(sentence)  for sentence in text )
+
+
+    def fit(self, tokenized_text):
+        corpus = []
+        for tokenized in tokenized_text:
+            corpus += tokenized
+
+
+        self.model = self.model_kind(sentences = corpus,  min_count=10, vector_size=300, epochs = 4)
+
+        return self
+    
+    def transform(self, tokenized_text):
+        
+        avg_vectors = tokenized_text.apply(self.average_vector_paragraph)
+        X = np.vstack(avg_vectors.to_numpy())
+        return X
