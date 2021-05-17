@@ -24,22 +24,22 @@ import numpy as np
 
 import sklearn 
 
+import numpy as np
+from sklearn.base import BaseEstimator, ClassifierMixin, TransformerMixin
+from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 
-class author_influence:
+
+class author_influence(TransformerMixin, BaseEstimator):
     
     def __init__(self):
         self.influence_df = None
-        self.global_mean = None
+        self.global_params = None
         
     def convert_to_mean(self, params):
         return powerlaw.moment(1, *params)
 
-
-    
     def fit(self, kind, submissions_df):
-        # A more systematic way to do this would be to use empirical bayes shrinkage
-        # I'm still pretty unsure about what the right model for upvotes is anyway...
-        # some kind of heavy tailed counting data parametric family...
+        # A more systematic way to do this would be to use empirical bayes shrinkage with some heavy tailed counting data distribution.
         
         
         if kind in ['mean', '50%', 'max']:
@@ -48,8 +48,8 @@ class author_influence:
             
             submissions_df = submissions_df.loc[submissions_df.author != "None"]
             author_df = submissions_df[['author', 'ups']].groupby('author').agg('describe')
-            self.influence = author_df[ ('ups', kind)]
-        
+            self.influence_df = author_df[ ('ups', kind)].to_frame('popularity_aggregate')
+
         if kind == 'power_law':
             # this is very slow
             self.global_params = self.convert_to_mean( powerlaw.fit (submissions_df.ups))
@@ -61,7 +61,7 @@ class author_influence:
             author_df = author_df.loc[  author_df[('ups', 'count')] >= 10 ] 
             author_df['popularity_parameters'] = author_df[('ups', '<lambda_0>')].apply(powerlaw.fit)
             author_df['popularity_aggregate'] = author_df['popularity_parameters'].apply(self.convert_to_mean)
-            self.influence_df = author_df['popularity_aggregate']
+            self.influence_df = author_df['popularity_aggregate'].to_frame('popularity_aggregate')
             
             
 
@@ -102,7 +102,6 @@ def sims(args, model):
 
 
 
-
 class tokenization:
     
     def __init__(self):
@@ -115,6 +114,8 @@ class tokenization:
     # given a body of text, this splits into sentences, then processes each word in the sentence to remove
     # non alphabetical characters... (? bad idea, what about users with numbers in their name)
     # returns it as a list of lists of words, the format desired by gensims word2vec
+
+
 
         sentences = []
         if type(text) == str:
@@ -170,3 +171,12 @@ class word2vec:
         avg_vectors = tokenized_text.apply(self.average_vector_paragraph)
         X = np.vstack(avg_vectors.to_numpy())
         return X
+
+
+### testing:
+    
+df = pd.read_csv("../Data/wsb_cleaned.csv", nrows = 1000)
+pop_agg = author_influence()
+pop_agg.fit(kind = 'power_law', submissions_df = df)
+df_2 = pop_agg.transform(df)
+print(df_2)
