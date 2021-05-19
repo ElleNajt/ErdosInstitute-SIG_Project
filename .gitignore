@@ -1,4 +1,5 @@
 # 
+/Feature_Design/aclImdb/*
 
 *.pkl
 *.csv

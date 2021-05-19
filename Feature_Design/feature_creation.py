@@ -56,17 +56,17 @@ class author_influence(TransformerMixin, BaseEstimator):
             
             
             submissions_df = submissions_df.loc[submissions_df.author != "None"]
-            author_df = submissions_df[['author', 'ups']].groupby('author').agg( [lambda x: tuple(x), 'count', 'mean'])
             
-            author_df = author_df.loc[  author_df[('ups', 'count')] >= 10 ] 
+            
+            author_df = submissions_df[['author', 'ups']].groupby('author').agg( [lambda x: tuple(x), 'count'])
+            
+            #author_df = author_df.loc[  author_df[('ups', 'count')] >= 10 ] 
+            
             author_df['popularity_parameters'] = author_df[('ups', '<lambda_0>')].apply(powerlaw.fit)
             author_df['popularity_aggregate'] = author_df['popularity_parameters'].apply(self.convert_to_mean)
-            self.influence_df = author_df['popularity_aggregate'].to_frame('popularity_aggregate')
+            self.influence_df = author_df['popularity_aggregate']#.to_frame('popularity_aggregate')
             
-            
-
-        # TODO: We can use beta_shrinkage for the upvote ratio term
-        
+  
         return self
         
 
@@ -180,3 +180,4 @@ pop_agg = author_influence()
 pop_agg.fit(kind = 'power_law', submissions_df = df)
 df_2 = pop_agg.transform(df)
 print(df_2)
+print(pop_agg.influence_df)
