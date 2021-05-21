@@ -29,7 +29,7 @@ from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 class author_influence(TransformerMixin, BaseEstimator):
     
     
-    def __init__(self):
+    def __init__(self, kind = 'mean'):
         """
         
         self.kind can be any column of describe() ( 'count', 'mean', etc.)
@@ -39,13 +39,14 @@ class author_influence(TransformerMixin, BaseEstimator):
         
         self.influence_df = None
         self.global_params = None
-        self.kind = None
+        self.kind = kind
+    
         
     def convert_to_mean(self, params):
         return powerlaw.moment(1, *params)
 
-    def fit(self, df):
-        
+    def fit(self, X = None, y = None):
+        df = X
         
         if self.kind in ['sum', 'count',]:
             self.global_params = 0 # for someone who has never posted...
@@ -77,20 +78,20 @@ class author_influence(TransformerMixin, BaseEstimator):
         return self
         
 
-    def transform(self, df):
-        
+    def transform(self, X):
+        df = X
         #self.influence_df.rename( columns = { "popularity_aggregate" : col_name} )
         
         merged = df.merge( self.influence_df, how = 'left', left_on = 'author', right_index = True)
         # this will leave NAs for authors in submission df that are not in self.influence_df
         # so we replace those Nas with self.global_mean
         
-        #merged.popularity_aggregate = merged.popularity_aggregate.fillna(self.global_mean)
+        merged["auth_agg" + self.kind ] = merged["auth_agg" + self.kind ].fillna(self.global_params)
         #merged.rename() #this could be dangerous if there's already a variable called that...
         
         #merged.rename( columns = { "popularity_aggregate_temp" : "auth_agg" + self.kind}, inplace = True)
-        merged = merged.fillna( {"auth_agg" + self.kind : self.global_params})
+        merged.fillna( {"auth_agg" + self.kind : self.global_params}, inplace = True)
         
-        return merged
+        return merged[["auth_agg" + self.kind ]]
     
     
