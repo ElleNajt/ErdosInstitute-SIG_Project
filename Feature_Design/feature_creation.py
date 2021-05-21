@@ -175,7 +175,7 @@ class word2vec:
 
 ### testing:
     
-df = pd.read_csv("../Data/wsb_cleaned.csv", nrows = 1000)
+df = pd.read_csv("../Data/subreddits.csv", nrows = 1000)
 pop_agg = author_influence()
 pop_agg.fit(kind = 'power_law', submissions_df = df)
 df_2 = pop_agg.transform(df)
