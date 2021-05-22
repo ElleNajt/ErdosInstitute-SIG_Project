@@ -32,7 +32,7 @@ class author_influence(TransformerMixin, BaseEstimator):
     def __init__(self, kind = 'mean'):
         """
         
-        self.kind can be any column of describe() ( 'count', 'mean', etc.)
+        self.kind can be anything that .agg() accepts
         'power_law'
         or 'total'
         """
@@ -87,9 +87,7 @@ class author_influence(TransformerMixin, BaseEstimator):
         # so we replace those Nas with self.global_mean
         
         merged["auth_agg" + self.kind ] = merged["auth_agg" + self.kind ].fillna(self.global_params)
-        #merged.rename() #this could be dangerous if there's already a variable called that...
-        
-        #merged.rename( columns = { "popularity_aggregate_temp" : "auth_agg" + self.kind}, inplace = True)
+  
         merged.fillna( {"auth_agg" + self.kind : self.global_params}, inplace = True)
         
         return merged[["auth_agg" + self.kind ]]
