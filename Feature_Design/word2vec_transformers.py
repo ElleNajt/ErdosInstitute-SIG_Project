@@ -77,7 +77,7 @@ class conceptcluster(TransformerMixin, BaseEstimator):
         
         return 0
     
-    def __init__(self, minclustersize = 10, maxclustersize = 100, roughclustersize = 200, verbose = True):
+    def __init__(self, minclustersize = 10, maxclustersize = 100, roughclustersize = 200, verbose = False):
         """
 
         """
