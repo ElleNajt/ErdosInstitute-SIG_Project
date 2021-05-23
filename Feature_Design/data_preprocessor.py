@@ -5,7 +5,7 @@ Created on Sat May 22 08:37:45 2021
 @author: lnajt
 """
 import pandas as pd
-
+import numpy as np
 from datetime import datetime as dt
 
 def preprocess(df):
@@ -47,4 +47,15 @@ def preprocess(df):
         
     award_cols = [ "award_" + award for award in award_types]
     
+    #fix up and downvotes:
+    # score = ups - downs
+    # ratio = ups/downs
+
+    df["ups"] = np.where(2 * df["upvote_ratio"] - 1 != 0, df["score"] * df["upvote_ratio"] / ( 2 * df["upvote_ratio"] - 1), np.nan) 
+    # put nan when value cant be solved for, because the ratio is .5, i.e. the score is zero.
+    df["ups"] = np.where( df["score"] == 0, np.nan, df["ups"])
+    # because of rounding in calculating the upvote ratio we can end up with situations with score = 0 and upvote ratio = .48
+    # so we go through and filter to set those to also be nan.
+    
+    df["downs"] = df["ups"] - df["score"]
     return df, award_cols

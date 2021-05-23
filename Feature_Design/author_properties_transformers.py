@@ -29,7 +29,7 @@ from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 class author_influence(TransformerMixin, BaseEstimator):
     
     
-    def __init__(self, kind = 'mean'):
+    def __init__(self, kind = 'mean', prior = None):
         """
         
         self.kind can be anything that .agg() accepts
@@ -40,7 +40,7 @@ class author_influence(TransformerMixin, BaseEstimator):
         self.influence_df = None
         self.global_params = None
         self.kind = kind
-    
+        self.prior = prior
         
     def convert_to_mean(self, params):
         return powerlaw.moment(1, *params)
@@ -61,6 +61,30 @@ class author_influence(TransformerMixin, BaseEstimator):
             author_df = df[['author', 'ups']].groupby('author').agg(self.kind )
             self.influence_df = author_df[ 'ups'].to_frame('popularity_aggregate')
 
+        if self.kind == 'beta_shrinkage_upvoteratio':
+
+            author_df = df[['author', 'ups', 'downs']].groupby('author').agg('sum')
+
+            author_df = author_df.dropna()
+            
+            mu = df.upvote_ratio.mean()
+            self.global_params = mu
+            sigma = df.upvote_ratio.std()
+            v = mu* (1 - mu)/sigma - 1
+            
+            if self.prior == 'empirical_bayes':
+                alpha = df.ups.sum()
+                beta = df.downs.sum()   
+            else:
+                alpha = self.prior[0]
+                beta = self.prior[1]
+            self.global_params = alpha/ ( alpha + beta)
+            
+            self.global_params_beta = (alpha, beta)
+            
+            author_df['beta_mean'] = (alpha + author_df["ups"]) / ( alpha + beta + author_df["downs"] + author_df["ups"])
+            self.author_df = author_df # for inspection
+            self.influence_df = author_df['beta_mean'].to_frame('popularity_aggregate')
         if self.kind == 'power_law':
             # this is very slow
             
