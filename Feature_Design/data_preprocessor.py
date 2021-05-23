@@ -25,4 +25,26 @@ def preprocess(df):
     df['weektime'] = df['created_datetime_utc'].apply( lambda x : x.weekday()*24 + x.hour)
     df['time_of_day'] = df['created_datetime_utc'].apply( lambda x : x.hour)
     
-    return df
+    
+    # Creates columns counting awards of various types -- this expects the data
+    # to come from the csvs created earlier.
+    df['all_awardings'] = df.all_awardings.apply(eval)
+
+    award_types = set()
+    for awardings in df.all_awardings:
+        for award in awardings:
+            award_types.add(award['name'])
+            
+    def count_award(award, awardings):
+        counter = 0
+        for given_award in awardings:
+            if given_award['name'] == award:
+                counter += given_award['count']
+        return counter
+    
+    for award in award_types:
+        df["award_" + award] = df.all_awardings.apply(lambda awardings : count_award(award,awardings))
+        
+    award_cols = [ "award_" + award for award in award_types]
+    
+    return df, award_cols
