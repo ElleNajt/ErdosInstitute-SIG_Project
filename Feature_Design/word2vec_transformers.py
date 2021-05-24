@@ -30,6 +30,7 @@ regex = re.compile('[^a-zA-Z ]')
 
 from emoji import emojize, demojize
 from urlextract import URLExtract
+extractor=URLExtract()
 
 def ReplaceEmojis(text):
     newsentence=""
@@ -41,7 +42,6 @@ def ReplaceEmojis(text):
     return newsentence
 
 def ReplaceURLs(text):
-    extractor=URLExtract()
     newsentence=""
     for word in text.split():
         if extractor.has_urls(word):
