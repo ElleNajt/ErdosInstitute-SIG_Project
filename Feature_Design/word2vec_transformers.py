@@ -59,9 +59,9 @@ def tokenize(text):
     if type(text) == str:
         for sentence in nltk.tokenize.sent_tokenize(text):
             #first find and replace URLs in sentence
-            sentence=ReplaceURLs(sentence)
+            #sentence=ReplaceURLs(sentence)
             #then replace the emojis
-            sentence=ReplaceEmojis(sentence)
+            #sentence=ReplaceEmojis(sentence)
             processed = [regex.sub('', word.lower()) for word in sentence.split(' ') ]
             processed = [word for word in processed if word not in set( ['' ])]
             sentences.append(processed)
