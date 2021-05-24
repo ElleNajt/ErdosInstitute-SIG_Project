@@ -28,6 +28,28 @@ from sklearn.decomposition import PCA
 
 regex = re.compile('[^a-zA-Z ]')
 
+from emoji import emojize, demojize
+from urlextract import URLExtract
+
+def ReplaceEmojis(text):
+    newsentence=""
+    for word in demojize(text).split():
+        if len(word)>1 and word[0]==":" and word[-1]==":":
+            newsentence=newsentence+ "emoji" + word[1:-1] + "emoji "
+        else:
+            newsentence=newsentence+ word + " "
+    return newsentence
+
+def ReplaceURLs(text):
+    extractor=URLExtract()
+    newsentence=""
+    for word in text.split():
+        if extractor.has_urls(word):
+            newsentence=newsentence+ "URL "
+        else:
+            newsentence=newsentence+ word + " "
+    return newsentence
+    
 def tokenize(text):
     # given a body of text, this splits into sentences, then processes each word in the sentence to remove
     # non alphabetical characters... (? bad idea, what about users with numbers in their name)
@@ -36,10 +58,27 @@ def tokenize(text):
     sentences = []
     if type(text) == str:
         for sentence in nltk.tokenize.sent_tokenize(text):
+            #first find and replace URLs in sentence
+            sentence=ReplaceURLs(sentence)
+            #then replace the emojis
+            sentence=ReplaceEmojis(sentence)
             processed = [regex.sub('', word.lower()) for word in sentence.split(' ') ]
             processed = [word for word in processed if word not in set( ['' ])]
             sentences.append(processed)
     return sentences
+
+#def tokenize(text):
+    # given a body of text, this splits into sentences, then processes each word in the sentence to remove
+    # non alphabetical characters... (? bad idea, what about users with numbers in their name)
+    # returns it as a list of lists of words, the format desired by gensims word2vec
+    
+#    sentences = []
+#    if type(text) == str:
+#        for sentence in nltk.tokenize.sent_tokenize(text):
+#            processed = [regex.sub('', word.lower()) for word in sentence.split(' ') ]
+#            processed = [word for word in processed if word not in set( ['' ])]
+#            sentences.append(processed)
+#    return sentences
 
 def train_w2v(tokenized_text):
 
