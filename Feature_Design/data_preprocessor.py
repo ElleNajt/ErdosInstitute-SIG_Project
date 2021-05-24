@@ -24,7 +24,7 @@ def preprocess(df):
     df["created_datetime_utc"] = df["created_utc"].apply(dt.utcfromtimestamp)
     df['weektime'] = df['created_datetime_utc'].apply( lambda x : x.weekday()*24 + x.hour)
     df['time_of_day'] = df['created_datetime_utc'].apply( lambda x : x.hour)
-    
+    df['day'] = df['created_datetime_utc'].apply( lambda x : x.day)
     
     # Creates columns counting awards of various types -- this expects the data
     # to come from the csvs created earlier.
