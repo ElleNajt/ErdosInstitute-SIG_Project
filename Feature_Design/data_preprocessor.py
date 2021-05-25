@@ -51,6 +51,8 @@ def preprocess(df):
     # score = ups - downs
     # ratio = ups/downs
 
+    # This is actually wrong, it isn't the score. I don't know anymore.
+    
     df["ups"] = np.where(2 * df["upvote_ratio"] - 1 != 0, df["score"] * df["upvote_ratio"] / ( 2 * df["upvote_ratio"] - 1), np.nan) 
     # put nan when value cant be solved for, because the ratio is .5, i.e. the score is zero.
     df["ups"] = np.where( df["score"] == 0, np.nan, df["ups"])
