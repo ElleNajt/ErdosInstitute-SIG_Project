@@ -39,7 +39,7 @@ def MaxClust(corpus_df, rough_cluster_size=200, num_pc=0.95,random_state=42, inf
 #given a word and a corpus dataframe with 'prediction' column
 #return all words in that cluster
 def GetRelated(df,word):
-    return list(df.loc[df.prediction==list(df.loc[df[0]==word].prediction)[0]][0])
+    return list(df.loc[df.prediction==list(df.loc[df['word']==word].prediction)[0]][0])
 
 
 #given a paragraph (tokenized, a list of lists of strings), check if it has any of the words in the cluster
@@ -64,7 +64,7 @@ def SampleMeanPlot(df_subset, bins=1000, sample_size=100, num_samples=10000):
 
 #given corpus_df with 'prediction' column and a cluster number, return the list of words in that cluster
 def WordsInCluster(clust_df,cluster):
-    return list(clust_df.loc[clust_df.prediction==cluster][0])
+    return list(clust_df.loc[clust_df.prediction==cluster]['word'])
 
 #return all posts in the given cluster
 def PostsInCluster(df,col_name,clust_df,cluster):
