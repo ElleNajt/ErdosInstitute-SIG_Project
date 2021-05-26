@@ -1,5 +1,6 @@
 from edahelper import *
 import numpy as np
+import itertools
 import matplotlib.pylab as pl
 
 import pandas as pd
@@ -9,7 +10,9 @@ import nltk
 
 import gensim.models
 import datetime
-#import networkx as nx
+import networkx as nx
+
+
 import numpy as np
 from matplotlib import pyplot as plt
 import pymc3 as pm
@@ -26,12 +29,12 @@ import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
 
 from sklearn.cluster import SpectralClustering
+import json
 
-wsb = pd.read_pickle("cultureshifts_preprocessed.pkl")
 
 ### Functions:
 
-def bayesian_change_point(wsb, keyword, statistic = 'sum', plot = True):
+def bayesian_change_point(wsb, keyword, statistic = 'sum', plot = True, method = None, steps = 50, tune = 50):
     wsb['contains_keyword'] =  wsb.tokenized_title.apply(lambda x : contains_word(x, keyword))
 
     agged_withgme = wsb[wsb.contains_keyword][['date', 'ups']].groupby("date").agg(statistic)
@@ -50,6 +53,8 @@ def bayesian_change_point(wsb, keyword, statistic = 'sum', plot = True):
 
     observations = list(agged_df[0])
     num_observation = len(observations)
+
+    print("running chain")
 
     with pm.Model() as model:
         mu = np.mean(observations)
@@ -71,9 +76,11 @@ def bayesian_change_point(wsb, keyword, statistic = 'sum', plot = True):
         beta_ = pm.math.switch( idx < tau, beta_1, beta_2)
         observation = pm.Beta("obs", alpha = alpha_, beta = beta_, observed=observations)
         # You can't have observations with value zero
-        #step = pm.Metropolis()
-        trace = pm.sample(1000, tune=200)#, step = step)
-
+        if method == 'Metropolis':
+            step = pm.Metropolis()
+            trace = pm.sample(steps, tune=tune, step = step)
+        if method == 'Auto':
+            trace = pm.sample(steps, tune=tune)
     tau_ints = [ int(x) for x in trace['tau']]
 
     t_dict = pd.Series(tau_ints).value_counts()
@@ -86,13 +93,15 @@ def bayesian_change_point(wsb, keyword, statistic = 'sum', plot = True):
 
     agged_df['tau'] = agged_df['tau'] / agged_df['tau'].sum()
 
+    agged_df.rename( columns = { 0 : keyword },  inplace = True)
+
     if plot == True:
         agged_df.plot()
 
     tau_map_arg = agged_df.tau.argmax()
 
 
-    return (agged_df, trace, tau_map_arg, agged_df.tau.iloc[tau_map_arg])
+    return (agged_df, trace, tau_map_arg, agged_df.iloc[tau_map_arg].name)
 
 def entropy(histogram):
     total = 0
@@ -105,24 +114,77 @@ def changepoint_entropy(wsb, keyword, stastic = 'sum'):
     histogram = bayesian_change_point(wsb, keyword = keyword, statistic = statistic, plot = False)[0]['tau']
     return entropy(histogram)
 
-pw = pd.read_pickle("pop_words_10.pkl")
-pop_words = list(set(itertools.chain.from_iterable(pw)))
+def contains_word(tokenized, target):
+    for sentence in tokenized:
+        if target in sentence:
+            return True
+    return False
 
-data = {}
+
+
+
+wsb = pd.read_pickle("cultureshifts_preprocessed.pkl")
+
+
+print("finished reading the data in")
+
+pop_words = ['gme', 'buy', 'amc', 'hold', 'moon', 'im', 'stock', 'robinhood', 'like', 'get', 'go', 'dont', 'going', 'today', 'short', 'us', 'new', 'lets', 'market', 'next', 'wsb', 'k', 'shares', 'time', 'stocks', 'sell', 'holding', 'nok', 'money', 'one', 'still', 'trading', 'bb', 'guys', 'buying', 'bought', 'make', 'help', 'know', 'good', 'calls', 'fuck', 'right', 'back', 'got', 'squeeze', 'day', 'need', 'retards', 'fucking', 'gamestop', 'think', 'week', 'tomorrow', 'anyone', 'people', 'cant', 'yolo', 'line', 'first', 'dip', 'options', 'big', 'hands', 'whats', 'puts', 'see', 'much', 'price', 'want', 'stop', 'apes', 'rh', 'keep', 'take', 'doge', 'selling', 'hedge', 'made', 'boys', 'way', 'diamond', 'dd', 'tendies', 'please', 'share', 'let', 'last', 'pltr', 'long', 'app', 'tsla', 'even', 'call', 'put', 'funds', 'would', 'everyone', 'silver', 'dogecoin']
+
 entropies = {}
+mus = {}
+mu_diff = {}
+tau_map = {}
+tau_std = {}
 
-up_to = 1
+up_to = None
 
-for word in pop_words[:1]:
-    data[word] = bayesian_change_point(wsb, keyword = word, statistic = 'sum', plot = False)
-    agged_df = data[word][0]
+method = "Metropolis"
+steps = 20000
+tune = 5000
+
+
+for word in pop_words[:up_to]:
+    print('working on', word)
+    data = bayesian_change_point(wsb, keyword = word, statistic = 'sum', plot = False, method = method, steps = steps, tune = tune)
+    agged_df = data[0]
     agged_df.plot()
-    plt.save_fig(f"ChangePoint{word}.png")
-    entropies[word] = entropy(data[word][0]['tau'])
-    print("Word: ", word, "Entropy: ", entropies[word])
+    plt.savefig(f"Data_{method}/ChangePoint_{word}.png")
+    entropies[word] = entropy(data[0]['tau'])
 
-entropies = pd.DataFrame(entropies)
-entropies.to_csv("Entropies.csv")
+    trace = data[1]
+    alpha_1 = trace['alpha_1']
+    beta_1 = trace['beta_1']
+    alpha_2 = trace['alpha_2']
+    beta_2 = trace['beta_2']
+    mu_1 = (alpha_1/ ( alpha_1 + beta_1)).mean()
+    mu_2 = (alpha_2/ ( alpha_2 + beta_2)).mean()
 
-with open('data.pickle', 'wb') as handle:
-    pickle.dump(data, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    mus[word] = (mu_1, mu_2)
+    mu_diff[word] = mu_2 - mu_1
+    tau_map[word] = data[3]
+    tau_std[word] = np.std(data[1]['tau'])
+
+    print("Word: ", word, "Entropy: ", entropies[word], "Mu's: ", mus[word], "Diff: ", mu_diff[word])
+
+    with open(f'Data_{method}/{word}_data.pickle', 'wb') as handle:
+        pickle.dump(data, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+
+
+
+with open(f'Data_{method}/mus.txt', 'w') as convert_file:
+     convert_file.write(json.dumps(mus))
+
+with open(f'Data_{method}/mu_diffs.txt', 'w') as convert_file:
+     convert_file.write(json.dumps(mu_diff))
+
+with open(f'Data_{method}/entropies.txt', 'w') as convert_file:
+     convert_file.write(json.dumps(entropies))
+
+
+with open(f'Data_{method}/tau_map.txt', 'w') as convert_file:
+     convert_file.write(json.dumps(tau_map))
+
+
+with open(f'Data_{method}/tau_std.txt', 'w') as convert_file:
+     convert_file.write(json.dumps(tau_std))
