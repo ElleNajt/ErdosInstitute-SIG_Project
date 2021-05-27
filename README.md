@@ -10,15 +10,15 @@ Our project is a data analysis pipeline with the following steps:
 
 # Folders:
 
-1. Automated:
+## Automated:
 
-This runs the entire process, from data collection to the neural net training.
+This runs the entire process, from data collection to the neural net training. Instructions inside.
 
-2. Guided Tour:
+## Guided Tour:
 
 This walks the user through the steps of our data processing pipeline.
 
-3. Sandbox:
+## Sandbox:
 
 This stores some unfinished experiments, including some interesting results from clustering word embeddings.
 
