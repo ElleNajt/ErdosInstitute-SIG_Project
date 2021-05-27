@@ -9,12 +9,16 @@ from ChangePointAnalysis import ChangePointAnalysis
 with open("config.txt") as file:
     exec(file.read())
 
+start = dt.datetime(start_year, start_month, start_day)
+end =  dt.datetime(end_year, end_month, endy_day)
+
 # Scrape:
 
 for subreddit in subreddits:
     if not os.path.exists(f"../Data/subreddit_{subreddit}/full.pkl"):
         print("Did not find scraped data, scraping.")
-        RedditScraper.scrape_data(subreddits = [subreddit], start = dt.datetime(2020, 1,1), end = dt.datetime(2020, 2,18))
+
+        RedditScraper.scrape_data(subreddits = [subreddit], start = start, end = end)
 
 # Compute changepoint data
 
