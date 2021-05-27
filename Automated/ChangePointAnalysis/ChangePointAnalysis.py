@@ -26,7 +26,15 @@ def compute_changepoints(subreddit = "Jokes"):
     results_df = pd.DataFrame()
 
     with open("mcmc_config.txt") as file:
-        exec(file.read())
+        contents = file.read()
+        exec(contents)
+
+    up_to = None # Default is None.
+    daily_words = 2
+    method = "Metropolis"
+    steps = 30000
+    tune = 5000
+
 
     pop_words = PopularWords.popular_words_unioned_each_date(df, daily_words)
 
@@ -71,7 +79,7 @@ def compute_changepoints(subreddit = "Jokes"):
         with open(f'{word}_data.pickle', 'wb') as handle:
             pickle.dump(data, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-    results_df.to_csv("results.csv")
+    results_df.to_csv("../results.csv")
     os.chdir(starting_dir)
 
 def changepointanalysis(subreddits = ["Jokes", "WallStreetBets", "WritingPrompts",  "TraditionalCurses", "TwoSentenceHorror"]):

@@ -45,7 +45,7 @@ from keras.callbacks import EarlyStopping
 
 def buildnets(subreddits):
     for subreddit in subreddits:
-        data_path = f'../Data/subreddit_{subreddit}/full.pkl'
+        data_path = f'../Data/subreddit_{subreddit}'
         model, accuracies = PostClassificationModel(data_path = data_path)
 
         #save model
@@ -88,9 +88,12 @@ def PostClassificationModel(data_path, embeddings_path = embeddings_path, custom
 
     #if data_path is a string, read in the corresponding file as df. Otherwise we assume it's a pandas dataframe
     if type(data_path) == str:
-        df = pd.read_pickle(data_path, low_memory=False)
+        df = pd.read_pickle(data_path + "/full.pkl")
     else:
         df = data_path.copy()
+
+    change_point_information = pd.read_csv(data_path + "/Changepoints/results.csv")
+
 
     #drop irrelevant data points
     df=DataSetup(df, exclude_removed=exclude_removed, drop_na_cols=text_cols_used)

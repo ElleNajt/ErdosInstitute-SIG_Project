@@ -24,10 +24,11 @@ for subreddit in subreddits:
         RedditScraper.scrape_data(subreddits = [subreddit], start = start, end = end)
 
 
-# Compute classifier stuff
-print('Training the neural nets:')
-NeuralNets.CreateNeuralNets(subreddits)
-
 # Compute changepoint data
 print('Computing the changepoints:')
 ChangePointAnalysis.changepointanalysis(subreddits)
+
+
+# Compute classifier stuff
+print('Training the neural nets:')
+CreateNeuralNets.buildnets(subreddits)
