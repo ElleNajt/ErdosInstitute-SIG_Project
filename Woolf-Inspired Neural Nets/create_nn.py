@@ -63,7 +63,7 @@ def DataSetup(dfog, exclude_removed=True, drop_na_cols=['title', 'selftext']):
         tempdf=dfog.loc[(((dfog.removed_by_category.isnull()))) & ((dfog.is_self==True) & ~(dfog["title"].str.contains("Thread|thread|Sunday Live Chat|consolidation zone|Containment Zone|Daily Discussion|Daily discussion|Saturday Chat|What Are Your Moves Tomorrow|What Are Your Moves Today|MEGATHREAD",na=False)))]
     else:
         tempdf=dfog.loc[((dfog.is_self==True) & ~(dfog["title"].str.contains("Thread|thread|Sunday Live Chat|consolidation zone|Containment Zone|Daily Discussion|Daily discussion|Saturday Chat|What Are Your Moves Tomorrow|What Are Your Moves Today|MEGATHREAD",na=False)))]
-        tempdf=tempdf.dropna(subset = drop_na_cols)
+    tempdf=tempdf.dropna(subset = drop_na_cols)
     return tempdf
   
   
@@ -104,6 +104,7 @@ titles_tf = sequence.pad_sequences(titles_tf, maxlen=maxlen)
 
 
 #set up pre-trained embeddings
+embedding_vectors = {}
 with open(embeddings_path, 'r',encoding='latin-1') as f:
     for line in f:
         #print(line)
