@@ -7,11 +7,13 @@ from DataGathering import RedditScraper
 from ChangePointAnalysis import ChangePointAnalysis
 
 with open("config.txt") as file:
-    exec(file.read())
+    contents = file.read()
+    exec(contents)
 
 start = dt.datetime(start_year, start_month, start_day)
-end =  dt.datetime(end_year, end_month, endy_day)
+end =  dt.datetime(end_year, end_month, end_day)
 
+print(start)
 # Scrape:
 
 for subreddit in subreddits:
