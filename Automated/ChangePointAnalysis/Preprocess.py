@@ -1,9 +1,4 @@
-from edahelper import *
 import numpy as np
-import matplotlib.pylab as pl
-import ot
-import ot.plot
-
 import pandas as pd
 import praw
 import re
@@ -11,29 +6,18 @@ import nltk
 
 import gensim.models
 import datetime
-import networkx as nx
-import xgboost as xgb
-
+import os
 import numpy as np
-import seaborn as sns
 
-
-import sklearn
-from sklearn.model_selection import train_test_split
-
-from sklearn.cluster import KMeans
-import matplotlib.pyplot as plt
-from sklearn.decomposition import PCA
-
-from sklearn.cluster import SpectralClustering
+import itertools
 
 from nltk.corpus import stopwords
 nltk.download('stopwords')
+nltk.download('punkt')
 from nltk.tokenize import word_tokenize
 
 regex = re.compile('[^a-zA-Z ]')
 
-#@numba.jit # unfortunately this doesn't jit easily :(
 def tokenize(text, stopwords_temp):
     # given a body of text, this splits into sentences, then processes each word in the sentence to remove
     # non alphabetical characters... (? bad idea, what about users with numbers in their name)
@@ -48,4 +32,25 @@ def tokenize(text, stopwords_temp):
             sentences.append(processed)
     return sentences
 
-wsb = pd.read_pickle("../Data/subreddit_WallStreetBets/otherdata/wsb_cleaned.pkl")
+
+def preprocess(df):
+
+    df["date"] = df["created_utc"].apply(lambda x : datetime.datetime.utcfromtimestamp(x).date() )
+    stopwords_temp = set(stopwords.words("english"))
+    df['tokenized_title'] = df.title.apply(lambda x : tokenize(x, stopwords_temp))
+    #df['tokenized_selftext'] = wsb.selftext.apply(lambda x : tokenize(x, stopwords_temp))
+    sub_df = pd.DataFrame( df[['tokenized_title', 'author', 'ups', 'id', 'date']])
+
+    return sub_df
+
+def load_and_preprocess(dataframe_path):
+    preprocessed_location = dataframe_path + "changepoint_preprocessed.pkl"
+    if os.path.exists(preprocessed_location):
+        return pd.read_pickle(preprocessed_location)
+    else:
+        print("Did not find preprocessed version, preprocessing. (This will only be done once.)")
+        df = pd.read_pickle(dataframe_path + "full.pkl")
+        preprocessed = preprocess(df)
+        preprocessed.to_pickle(preprocessed_location)
+
+    return preprocessed
