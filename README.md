@@ -14,10 +14,13 @@ Our project is a data analysis pipeline with the following steps:
 
 This runs the entire process, from data collection to the neural net training.
 
-2. Notebooks:
+2. Guided Tour:
 
 This walks the user through the steps of our data processing pipeline.
 
+3. Sandbox:
+
+This stores some unfinished experiments, including some interesting results from clustering word embeddings.
 
 # Acknowledgements:
 
