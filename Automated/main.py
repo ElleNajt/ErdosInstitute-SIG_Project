@@ -5,6 +5,7 @@ import datetime as dt
 
 from DataGathering import RedditScraper
 from ChangePointAnalysis import ChangePointAnalysis
+from NeuralNets import CreateNeuralNets
 
 with open("config.txt") as file:
     contents = file.read()
@@ -22,9 +23,11 @@ for subreddit in subreddits:
 
         RedditScraper.scrape_data(subreddits = [subreddit], start = start, end = end)
 
-# Compute changepoint data
-
-print('Computing the changepoints:')
-ChangePointAnalysis.changepointanalysis(subreddits)
 
 # Compute classifier stuff
+print('Training the neural nets:')
+NeuralNets.CreateNeuralNets(subreddits)
+
+# Compute changepoint data
+print('Computing the changepoints:')
+ChangePointAnalysis.changepointanalysis(subreddits)
