@@ -25,11 +25,8 @@ def compute_changepoints(subreddit = "Jokes"):
     df = pd.DataFrame( df)
     results_df = pd.DataFrame()
 
-    up_to = 2
-    daily_words = 2
-    method = "Metropolis"
-    steps = 30
-    tune = 50
+    with open("mcmc_config.txt") as file:
+        exec(file.read())
 
     pop_words = PopularWords.popular_words_unioned_each_date(df, daily_words)
 

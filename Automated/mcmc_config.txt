@@ -1,0 +1,5 @@
+up_to = 2 # Default is None.
+daily_words = 2
+method = "Metropolis"
+steps = 30
+tune = 50
