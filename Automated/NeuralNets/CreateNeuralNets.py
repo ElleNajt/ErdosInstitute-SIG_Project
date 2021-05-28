@@ -42,6 +42,7 @@ from keras.layers.core import Masking, Dropout, Reshape
 from keras.layers.normalization import BatchNormalization
 from keras.callbacks import EarlyStopping
 
+from sklearn.model_selection import train_test_split
 
 def buildnets(subreddits):
     for subreddit in subreddits:
@@ -71,7 +72,7 @@ def DataSetup(dfog, exclude_removed=True, drop_na_cols=['title']):
 
 
 
-def make_embedding_matrix(word_tokenizer):
+def make_embedding_matrix(word_tokenizer, embeddings_path):
 
     embedding_vectors = {}
     with open(embeddings_path, 'r',encoding='latin-1') as f:
@@ -94,15 +95,11 @@ def make_embedding_matrix(word_tokenizer):
 
     return weights_matrix, embedding_dims
 
-def create_categorical():
-
-
-
 
 #data_path should either be a string (the location of the subreddit data) or a pandas dataframe
 #embeddings_path should be a string, the location of the embeddings file
 #returns a pair: the model and a list [accuracy to beat, accuracy on validation set, accuracy on test set]
-def PostClassificationModel(data_path, embeddings_path = embeddings_path, custom_seed= custom_seed,
+def PostClassificationModel(data_path, embeddings_path = embeddings_path, custom_seed=custom_seed,
                             max_features = max_features, maxlen = maxlen, batch_size = batch_size,
                             epochs = epochs, meta_embedding_dims = meta_embedding_dims,
                             dense_layer_size = dense_layer_size, text_cols_used = text_cols_used,
@@ -111,6 +108,7 @@ def PostClassificationModel(data_path, embeddings_path = embeddings_path, custom
                             early_stopping_patience = early_stopping_patience, model_loss = model_loss,
                             model_optimizer = model_optimizer, model_metrics = model_metrics,
                             model_loss_weights = model_loss_weights):
+
     print("Starting Post Classification Model.")
     #if data_path is a string, read in the corresponding file as df. Otherwise we assume it's a pandas dataframe
     if type(data_path) == str:
@@ -120,21 +118,25 @@ def PostClassificationModel(data_path, embeddings_path = embeddings_path, custom
 
     #change_point_information = pd.read_csv(data_path + "/Changepoints/results.csv")
 
-
+    print("size-2", len(df))
     #drop irrelevant data points
-    df=DataSetup(df, exclude_removed=exclude_removed, drop_na_cols=text_cols_used)
 
-    for new_col in ['hour', 'minute', ]
-            df[col] = np.array(df.utc.apply(lambda x : getattr(x, col)), dtype=int)
-    df['weekday'] = np.array(df.utc.apply(lambda x : x.weekday()), dtype=int)
+    df=DataSetup(df, exclude_removed=exclude_removed, drop_na_cols=text_cols_used)
+    print("size-1", len(df))
+    time_features = ['minute','hour','dayofweek', 'dayofyear' ]
+    binary_features = ['year']
+
+    for new_col in ['hour', 'minute', ]:
+            df[new_col] = np.array(df.utc.apply(lambda x : getattr(x, new_col)), dtype=int)
+    df['dayofweek'] = np.array(df.utc.apply(lambda x : x.weekday()), dtype=int)
     df['dayofyear'] = np.array(df.utc.apply(lambda x : x.timetuple().tm_yday), dtype=int)  - 1
-    df['is_top_submission'] = np.array(df.ups.apply(lambda x : GoodPost(x,ups_median)), dtype=int)
     df['year'] = np.array(df.utc.apply(lambda x : x.year), dtype=int)
     df['year'] = df['year'] - df['year'].min()
 
     #extract data from the dataframe
     #find the median number of upvotes
     ups_median=np.median(df.ups)
+    df['is_top_submission'] = np.array(df.ups.apply(lambda x : GoodPost(x,ups_median)), dtype=int)
 
     #titles is either the titles or the titles + selftext
 
@@ -147,9 +149,16 @@ def PostClassificationModel(data_path, embeddings_path = embeddings_path, custom
     word_tokenizer = Tokenizer(max_features)
     word_tokenizer.fit_on_texts(df["training_text"])
     text_seq = word_tokenizer.texts_to_sequences(df["training_text"])
-    text_padded = sequence.pad_sequences(text_seq, maxlen=maxlen)
-    df['text_padded'] = text_padded
-
+    text_padded = pd.DataFrame(sequence.pad_sequences(text_seq, maxlen=maxlen), index = df.index)
+    text_padded_cols = text_padded.columns
+    features = list(text_padded_cols) + time_features + binary_features
+    other_cols = time_features + binary_features
+    print('features', features)
+    print("size0", len(df))
+    df = pd.concat([df, pd.DataFrame(text_padded)], axis = 1)
+    #print('after padding', 472 in df.index)
+    #print(df.columns)
+    #print(text_padded)
     #set up pre-trained embeddings
 
     weights_matrix, embedding_dims = make_embedding_matrix(word_tokenizer, embeddings_path)
@@ -178,19 +187,19 @@ def PostClassificationModel(data_path, embeddings_path = embeddings_path, custom
 
 
         #set up time layers
-        time_features = [ ( 'hours', 24), ('daysofweek', 7), ('minutes', 60), ('daysofyear', 366)]
+        time_features = [('minute', 60),  ( 'hour', 24), ('dayofweek', 7), ('dayofyear', 366)]
         time_inputs = []
         time_reshapes = []
         for name, dimension in time_features:
-            input_layer, reshape = create_one_dimensional_layer(name, dimension, meta_embedding_dims))
+            input_layer, reshape = create_one_dimensional_layer(name, dimension, meta_embedding_dims)
             time_reshapes.append(reshape)
             time_inputs.append(input_layer)
 
 
-        binary_features  = ['years']
+        binary_features  = ['year']
         binary_reshapes = []
         binary_inputs = []
-        for feature in binary_layers
+        for feature in binary_features:
             layer = Input(shape=(1,), name=feature)
             binary_reshapes.append(layer)
             binary_inputs.append(layer)
@@ -203,7 +212,7 @@ def PostClassificationModel(data_path, embeddings_path = embeddings_path, custom
 
         main_output = Dense(1, activation='sigmoid', name='main_out')(hidden_1)
 
-        input_layers = [text_input] + time_input_layers + binary_inputs
+        input_layers = [text_input] + time_inputs + binary_inputs
         model = Model( inputs = input_layers, outputs = [main_output, aux_output])
 
         model.compile(loss=model_loss,
@@ -221,34 +230,47 @@ def PostClassificationModel(data_path, embeddings_path = embeddings_path, custom
     ###train, validation, test split
     # returns randomized indices with no repeats
 
+
     # permute the rows because of how keras takes the validation set from the end
+    print("size1", len(df))
     df = df.sample(frac = 1, random_state = custom_seed)
 
-    features_cols =
-    features_df = df[[feature_cols]]
+    features_df = df[features]
     target = 'is_top_submission'
     target_df = df[target]
-    #reindex the lists according to idx
-
-
+    print("size2", len(df))
     train_X,  test_X, train_y, test_y = train_test_split(features_df, target_df, test_size=test_size, random_state=custom_seed)
-
+    print(len(train_X), len(train_y), len(test_X), len(test_y))
     #set up early stopping
     earlyStopping = EarlyStopping(monitor=optimization_quantity[0], min_delta=0, patience=early_stopping_patience, verbose=0, mode=optimization_quantity[1], restore_best_weights=True)
 
-    def convert_df_for_keras(df):
-        list_of_cols = []
-        for col in df.columns:
-            list_of_cols.append( np.array( df[col] ))
-        return list_of_cols
+    def convert_df_for_keras(df, text_padded_cols, other_cols):
+        text_columns = []
+        for col in text_padded_cols:
+            text_columns.append( np.array( df[col] ))
+        text_array = np.stack(text_columns, axis = -1)
 
-    history = model.fit(convert_df_for_keras(train_X), [train_y, train_y], batch_size=batch_size,epochs=epochs,validation_split=split, callbacks=[earlyStopping])
+        inputs = [text_array]
+        for col in other_cols:
+            inputs.append( np.array( df[col]))
+        return inputs
+    #print(train_X)
+    #print("converting")
+    X_train = convert_df_for_keras(train_X, list(text_padded_cols), other_cols)
+    print(len(X_train))
+
+    history = model.fit(X_train, [train_y, train_y], batch_size=batch_size,epochs=epochs,validation_split=split, callbacks=[earlyStopping])
 
 
     ####print results:
     #print baseline accuracy
     print("Using the dummy classifier (assuming all posts are less than or equal to the median), the accuracy is: ")
-    acc_to_beat=1-np.mean(is_top_submission[:(int(titles_tf.shape[0] * split))])
+    #from sklearn.dummy import DummyClassifier
+    #dc = DummyClassifier()
+    #dc.fit( features_df, target_df)
+    acc_to_beat=1-np.mean(target_df)
+    print("talk more about this")
+
     print(acc_to_beat)
     #print best validation accuracy
     print("The accuracy of the model on the validation set is: ")
@@ -257,7 +279,7 @@ def PostClassificationModel(data_path, embeddings_path = embeddings_path, custom
     #get the accuracy on the test set
     print("The accuracy of the model on the test set is: ")
 
-    acc_on_test = model.evaluate(convert_df_for_keras(test_X), [test_y, test_y], verbose=0)[3]
+    acc_on_test = model.evaluate(convert_df_for_keras(test_X, list(text_padded_cols), other_cols), [test_y, test_y], verbose=0)[3]
 
     print(acc_on_test)
 
