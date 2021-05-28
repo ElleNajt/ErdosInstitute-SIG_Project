@@ -1,8 +1,8 @@
 ##set default values for all constants
 ##these can all be changed when calling PostClassificationModel
 
-embeddings_path = '../Data/glove.6B.50d.txt'
 
+embeddings_path = '../Data/glove.6B.50d.txt'
 
 
 
@@ -16,7 +16,7 @@ text_cols_used=['title'] #which text columns to use
 exclude_removed = True #exclude removed and deleted posts from the data set
 use_year = False #whether to include the year in the calculation
 split = 0.25 #percent of training set to use for validation
-test_split = 0.2 #percent of data set to use for testing
+test_size = 0.2 #percent of data set to use for testing
 optimization_quantity = ['val_main_out_accuracy','max'] #we want to maximize the accuracy on the validation set
 early_stopping_patience = 5 #how soon to stop if accuracy is not improving
 model_loss='binary_crossentropy'  #loss function used in model
@@ -71,63 +71,8 @@ def DataSetup(dfog, exclude_removed=True, drop_na_cols=['title']):
 
 
 
+def make_embedding_matrix(word_tokenizer):
 
-
-#data_path should either be a string (the location of the subreddit data) or a pandas dataframe
-#embeddings_path should be a string, the location of the embeddings file
-#returns a pair: the model and a list [accuracy to beat, accuracy on validation set, accuracy on test set]
-def PostClassificationModel(data_path, embeddings_path = embeddings_path, custom_seed=custom_seed,
-                            max_features = max_features, maxlen = maxlen, batch_size = batch_size,
-                            epochs = epochs, meta_embedding_dims = meta_embedding_dims,
-                            dense_layer_size = dense_layer_size, text_cols_used = text_cols_used,
-                            exclude_removed = exclude_removed, use_year = use_year, split = split,
-                            test_split = test_split, optimization_quantity = optimization_quantity,
-                            early_stopping_patience = early_stopping_patience, model_loss = model_loss,
-                            model_optimizer = model_optimizer, model_metrics = model_metrics,
-                            model_loss_weights = model_loss_weights):
-    print("Starting Post Classification Model.")
-    #if data_path is a string, read in the corresponding file as df. Otherwise we assume it's a pandas dataframe
-    if type(data_path) == str:
-        df = pd.read_pickle(data_path + "/full.pkl")
-    else:
-        df = data_path.copy()
-
-    #change_point_information = pd.read_csv(data_path + "/Changepoints/results.csv")
-
-
-    #drop irrelevant data points
-    df=DataSetup(df, exclude_removed=exclude_removed, drop_na_cols=text_cols_used)
-
-    #extract data from the dataframe
-    #find the median number of upvotes
-    ups_median=np.median(df.ups)
-    #titles is either the titles or the titles + selftext, depending on the number of text_cols_used
-    if len(text_cols_used)>1:
-        titles = np.array(df.title + " " + df.selftext)
-    else:
-        titles = np.array(df[text_cols_used[0]])
-    hours = np.array(df.utc.apply(lambda x : x.hour), dtype=int)
-    minutes = np.array(df.utc.apply(lambda x : x.minute), dtype=int)
-    dayofweeks = np.array(df.utc.apply(lambda x : x.weekday()), dtype=int)
-    dayofyears = np.array(df.utc.apply(lambda x : x.timetuple().tm_yday), dtype=int)
-    is_top_submission = np.array(df.ups.apply(lambda x : GoodPost(x,ups_median)), dtype=int)
-    #zero-index dayofyears
-    dayofyears_tf=dayofyears-1
-
-    #if applicable, get year information and zero-index it
-    if use_year:
-        years = np.array(df.utc.apply(lambda x : x.year), dtype=int)
-        years = years - min(years)
-
-
-    #process text
-    word_tokenizer = Tokenizer(max_features)
-    word_tokenizer.fit_on_texts(titles)
-    titles_tf = word_tokenizer.texts_to_sequences(titles)
-    titles_tf = sequence.pad_sequences(titles_tf, maxlen=maxlen)
-
-
-    #set up pre-trained embeddings
     embedding_vectors = {}
     with open(embeddings_path, 'r',encoding='latin-1') as f:
         for line in f:
@@ -147,8 +92,75 @@ def PostClassificationModel(data_path, embeddings_path = embeddings_path, custom
         if embedding_vector is not None and i <= max_features:
             weights_matrix[i] = embedding_vector
 
+    return weights_matrix, embedding_dims
+
+def create_categorical():
 
 
+
+
+#data_path should either be a string (the location of the subreddit data) or a pandas dataframe
+#embeddings_path should be a string, the location of the embeddings file
+#returns a pair: the model and a list [accuracy to beat, accuracy on validation set, accuracy on test set]
+def PostClassificationModel(data_path, embeddings_path = embeddings_path, custom_seed= custom_seed,
+                            max_features = max_features, maxlen = maxlen, batch_size = batch_size,
+                            epochs = epochs, meta_embedding_dims = meta_embedding_dims,
+                            dense_layer_size = dense_layer_size, text_cols_used = text_cols_used,
+                            exclude_removed = exclude_removed, use_year = use_year, split = split,
+                            test_size = test_size, optimization_quantity = optimization_quantity,
+                            early_stopping_patience = early_stopping_patience, model_loss = model_loss,
+                            model_optimizer = model_optimizer, model_metrics = model_metrics,
+                            model_loss_weights = model_loss_weights):
+    print("Starting Post Classification Model.")
+    #if data_path is a string, read in the corresponding file as df. Otherwise we assume it's a pandas dataframe
+    if type(data_path) == str:
+        df = pd.read_pickle(data_path + "/full.pkl")
+    else:
+        df = data_path.copy()
+
+    #change_point_information = pd.read_csv(data_path + "/Changepoints/results.csv")
+
+
+    #drop irrelevant data points
+    df=DataSetup(df, exclude_removed=exclude_removed, drop_na_cols=text_cols_used)
+
+    for new_col in ['hour', 'minute', ]
+            df[col] = np.array(df.utc.apply(lambda x : getattr(x, col)), dtype=int)
+    df['weekday'] = np.array(df.utc.apply(lambda x : x.weekday()), dtype=int)
+    df['dayofyear'] = np.array(df.utc.apply(lambda x : x.timetuple().tm_yday), dtype=int)  - 1
+    df['is_top_submission'] = np.array(df.ups.apply(lambda x : GoodPost(x,ups_median)), dtype=int)
+    df['year'] = np.array(df.utc.apply(lambda x : x.year), dtype=int)
+    df['year'] = df['year'] - df['year'].min()
+
+    #extract data from the dataframe
+    #find the median number of upvotes
+    ups_median=np.median(df.ups)
+
+    #titles is either the titles or the titles + selftext
+
+    for col in text_cols_used:
+        df[col] = " " +  df[col] + " "
+    df["training_text"] = df[text_cols_used].sum(axis = 1)
+
+
+    #process text
+    word_tokenizer = Tokenizer(max_features)
+    word_tokenizer.fit_on_texts(df["training_text"])
+    text_seq = word_tokenizer.texts_to_sequences(df["training_text"])
+    text_padded = sequence.pad_sequences(text_seq, maxlen=maxlen)
+    df['text_padded'] = text_padded
+
+    #set up pre-trained embeddings
+
+    weights_matrix, embedding_dims = make_embedding_matrix(word_tokenizer, embeddings_path)
+
+
+    def create_one_dimensional_layer(name, dimensions, meta_embedding_dims):
+        input_layer = Input(shape=(1,), name=name)
+        embedding = Embedding(dimensions, meta_embedding_dims)(input_layer)
+        reshape = Reshape((meta_embedding_dims,))(embedding)
+
+        return input_layer, reshape
 
 
     #returns the compiled model
@@ -157,60 +169,42 @@ def PostClassificationModel(data_path, embeddings_path = embeddings_path, custom
                      model_loss=model_loss,model_optimizer=model_optimizer,
                      model_metrics=model_metrics, model_loss_weights=model_loss_weights):
         #title (and/or selftext) layers
-        titles_input = Input(shape=(maxlen,), name='titles_input')
-        titles_embedding = Embedding(max_features + 1, embedding_dims, weights=[weights_matrix])(titles_input)
-        titles_pooling = GlobalAveragePooling1D()(titles_embedding)
+        text_input = Input(shape=(maxlen,), name='text_input')
+        text_embedding = Embedding(max_features + 1, embedding_dims, weights=[weights_matrix])(text_input)
+        text_pooling = GlobalAveragePooling1D()(text_embedding)
 
         #auxiliary output to regularize text
-        aux_output = Dense(1, activation='sigmoid', name='aux_out')(titles_pooling)
+        aux_output = Dense(1, activation='sigmoid', name='aux_out')(text_pooling)
 
 
         #set up time layers
-        hours_input = Input(shape=(1,), name='hours_input')
-        hours_embedding = Embedding(24, meta_embedding_dims)(hours_input)
-        hours_reshape = Reshape((meta_embedding_dims,))(hours_embedding)
+        time_features = [ ( 'hours', 24), ('daysofweek', 7), ('minutes', 60), ('daysofyear', 366)]
+        time_inputs = []
+        time_reshapes = []
+        for name, dimension in time_features:
+            input_layer, reshape = create_one_dimensional_layer(name, dimension, meta_embedding_dims))
+            time_reshapes.append(reshape)
+            time_inputs.append(input_layer)
 
-        dayofweeks_input = Input(shape=(1,), name='dayofweeks_input')
-        dayofweeks_embedding = Embedding(7, meta_embedding_dims)(dayofweeks_input)
-        dayofweeks_reshape = Reshape((meta_embedding_dims,))(dayofweeks_embedding)
 
-        minutes_input = Input(shape=(1,), name='minutes_input')
-        minutes_embedding = Embedding(60, meta_embedding_dims)(minutes_input)
-        minutes_reshape = Reshape((meta_embedding_dims,))(minutes_embedding)
+        binary_features  = ['years']
+        binary_reshapes = []
+        binary_inputs = []
+        for feature in binary_layers
+            layer = Input(shape=(1,), name=feature)
+            binary_reshapes.append(layer)
+            binary_inputs.append(layer)
 
-        dayofyears_input = Input(shape=(1,), name='dayofyears_input')
-        dayofyears_embedding = Embedding(366, meta_embedding_dims)(dayofyears_input)
-        dayofyears_reshape = Reshape((meta_embedding_dims,))(dayofyears_embedding)
 
-        #if we are using the year, add those layers as well
-        if use_year:
-            years_input=Input(shape=(1,), name='years_input')
-            years_reshape=years_input
-            #create the appropriate merged layer
-            merged = concatenate([titles_pooling, hours_reshape, dayofweeks_reshape, minutes_reshape, dayofyears_reshape, years_reshape])
-        else:
-            merged = concatenate([titles_pooling, hours_reshape, dayofweeks_reshape, minutes_reshape, dayofyears_reshape])
-
+        merged = concatenate([text_pooling] + time_reshapes + binary_reshapes)
 
         hidden_1 = Dense(dense_layer_size, activation='relu')(merged)
         hidden_1 = BatchNormalization()(hidden_1)
 
         main_output = Dense(1, activation='sigmoid', name='main_out')(hidden_1)
 
-        #compile the model
-        if use_year:
-            model = Model(inputs=[titles_input,
-                                  hours_input,
-                                  dayofweeks_input,
-                                  minutes_input,
-                                  dayofyears_input,
-                                  years_input], outputs=[main_output, aux_output])
-        else:
-            model = Model(inputs=[titles_input,
-                                  hours_input,
-                                  dayofweeks_input,
-                                  minutes_input,
-                                  dayofyears_input], outputs=[main_output, aux_output])
+        input_layers = [text_input] + time_input_layers + binary_inputs
+        model = Model( inputs = input_layers, outputs = [main_output, aux_output])
 
         model.compile(loss=model_loss,
                       optimizer=model_optimizer,
@@ -226,54 +220,29 @@ def PostClassificationModel(data_path, embeddings_path = embeddings_path, custom
 
     ###train, validation, test split
     # returns randomized indices with no repeats
-    num_rows=len(titles_tf)
-    seed(custom_seed)
-    idx = sample(range(num_rows), num_rows)
 
+    # permute the rows because of how keras takes the validation set from the end
+    df = df.sample(frac = 1, random_state = custom_seed)
+
+    features_cols =
+    features_df = df[[feature_cols]]
+    target = 'is_top_submission'
+    target_df = df[target]
     #reindex the lists according to idx
-    titles_tf = titles_tf[idx, :]
-    hours = hours[idx]
-    dayofweeks = dayofweeks[idx]
-    minutes = minutes[idx]
-    dayofyears_tf = dayofyears_tf[idx]
-    is_top_submission = is_top_submission[idx]
-    if use_year:
-        years=years[idx]
-
-    #find the end of the training set
-    train_end = int((1-test_split)*num_rows)
-
-    #create training and test sets
-    titles_train = titles_tf[:train_end, :]
-    titles_test = titles_tf[train_end:, :]
-    hours_train = hours[:train_end]
-    hours_test = hours[train_end:]
-    dayofweeks_train = dayofweeks[:train_end]
-    dayofweeks_test = dayofweeks[train_end:]
-    minutes_train = minutes[:train_end]
-    minutes_test = minutes[train_end:]
-    dayofyears_train = dayofyears[:train_end]
-    dayofyears_test = dayofyears[train_end:]
-    is_top_submission_train = is_top_submission[:train_end]
-    is_top_submission_test = is_top_submission[train_end:]
-
-    if use_year:
-        years = years[idx]
-        years_train = years[:train_end]
-        years_test = years[train_end:]
-        training_data = [titles_train, hours_train, dayofweeks_train, minutes_train, dayofyears_train, years_train]
-    else:
-        training_data = [titles_train, hours_train, dayofweeks_train, minutes_train, dayofyears_train]
 
 
+    train_X,  test_X, train_y, test_y = train_test_split(features_df, target_df, test_size=test_size, random_state=custom_seed)
 
     #set up early stopping
     earlyStopping = EarlyStopping(monitor=optimization_quantity[0], min_delta=0, patience=early_stopping_patience, verbose=0, mode=optimization_quantity[1], restore_best_weights=True)
 
+    def convert_df_for_keras(df):
+        list_of_cols = []
+        for col in df.columns:
+            list_of_cols.append( np.array( df[col] ))
+        return list_of_cols
 
-
-
-    history = model.fit(training_data, [is_top_submission_train, is_top_submission_train], batch_size=batch_size,epochs=epochs,validation_split=split, callbacks=[earlyStopping])
+    history = model.fit(convert_df_for_keras(train_X), [train_y, train_y], batch_size=batch_size,epochs=epochs,validation_split=split, callbacks=[earlyStopping])
 
 
     ####print results:
@@ -287,12 +256,9 @@ def PostClassificationModel(data_path, embeddings_path = embeddings_path, custom
     print(acc_on_val)
     #get the accuracy on the test set
     print("The accuracy of the model on the test set is: ")
-    if use_year:
-        acc_on_test = model.evaluate([titles_test, hours_test, dayofweeks_test, minutes_test, dayofyears_test,
-                                      years_test], [is_top_submission_test, is_top_submission_test], verbose=0)[3]
-    else:
-        acc_on_test = model.evaluate([titles_test, hours_test, dayofweeks_test, minutes_test, dayofyears_test],
-                                     [is_top_submission_test, is_top_submission_test], verbose=0)[3]
+
+    acc_on_test = model.evaluate(convert_df_for_keras(test_X), [test_y, test_y], verbose=0)[3]
+
     print(acc_on_test)
 
     #return the model and the accuracy information
