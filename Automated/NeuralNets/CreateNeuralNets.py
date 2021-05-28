@@ -46,7 +46,7 @@ from keras.callbacks import EarlyStopping
 def buildnets(subreddits):
     for subreddit in subreddits:
         data_path = f'../Data/subreddit_{subreddit}'
-        model, accuracies = PostClassificationModel(data_path = data_path)
+        model, accuracies = PostClassificationModel(data_path = data_path, use_year = True)
 
         #save model
         model.save( f'../Data/subreddit_{subreddit}/NN_model.keras')
@@ -85,14 +85,14 @@ def PostClassificationModel(data_path, embeddings_path = embeddings_path, custom
                             early_stopping_patience = early_stopping_patience, model_loss = model_loss,
                             model_optimizer = model_optimizer, model_metrics = model_metrics,
                             model_loss_weights = model_loss_weights):
-
+    print("Starting Post Classification Model.")
     #if data_path is a string, read in the corresponding file as df. Otherwise we assume it's a pandas dataframe
     if type(data_path) == str:
         df = pd.read_pickle(data_path + "/full.pkl")
     else:
         df = data_path.copy()
 
-    change_point_information = pd.read_csv(data_path + "/Changepoints/results.csv")
+    #change_point_information = pd.read_csv(data_path + "/Changepoints/results.csv")
 
 
     #drop irrelevant data points
@@ -152,7 +152,7 @@ def PostClassificationModel(data_path, embeddings_path = embeddings_path, custom
 
 
     #returns the compiled model
-    def create_model(use_year=False, maxlen=maxlen, max_features=max_features,
+    def create_model(use_year=use_year, maxlen=maxlen, max_features=max_features,
                      embedding_dims=embedding_dims,meta_embedding_dims=meta_embedding_dims,
                      model_loss=model_loss,model_optimizer=model_optimizer,
                      model_metrics=model_metrics, model_loss_weights=model_loss_weights):
@@ -218,7 +218,7 @@ def PostClassificationModel(data_path, embeddings_path = embeddings_path, custom
                       loss_weights=model_loss_weights)
         return model
 
-    model = create_model(use_year=False, maxlen=maxlen, max_features=max_features,
+    model = create_model(use_year=use_year, maxlen=maxlen, max_features=max_features,
                      embedding_dims=embedding_dims,meta_embedding_dims=meta_embedding_dims,
                      model_loss=model_loss,model_optimizer=model_optimizer,
                      model_metrics=model_metrics, model_loss_weights=model_loss_weights)
