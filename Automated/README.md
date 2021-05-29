@@ -3,11 +3,13 @@
 ### Setup: 
 In order to use this code, please go to http://nlp.stanford.edu/data/glove.6B.zip, download the .zip file, and extract its contents to the Data folder. 
 
-You will also need a reddit API key, stored in this folder as API.env. It should consist of the following:
+You will also need a reddit API key, stored in this folder as API.env. It should be formatted as follows:
 
-user_agent = ""
-client_id = ""
-client_secret = ""
+> user_agent = ""
+> 
+> client_id = ""
+> 
+> client_secret = ""
 
 Then run main.py.
 
