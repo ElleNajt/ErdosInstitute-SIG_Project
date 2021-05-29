@@ -11,6 +11,8 @@ You will also need a reddit API key, stored in this folder as API.env. It should
 > 
 > client_secret = ""
 
+Modify config for the subreddits and time period you are interested in scraping and analyzing.
+
 Then run main.py.
 
 ### Description:
