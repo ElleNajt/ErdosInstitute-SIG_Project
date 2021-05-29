@@ -45,13 +45,15 @@ from keras.callbacks import EarlyStopping
 from sklearn.model_selection import train_test_split
 
 def buildnets(subreddits):
+    results = []
     for subreddit in subreddits:
         data_path = f'../Data/subreddit_{subreddit}'
         model, accuracies, word_tokenizer, cleaned_df = PostClassificationModel(data_path = data_path, use_year = True)
 
         #save model
         model.save( f'../Data/subreddit_{subreddit}/NN_model.keras')
-
+        results.append( (model, accuracies, word_tokenizer, cleaned_df  ))
+    return results
 
 #For predicting time series of post popularity.
 def encode_text(text, word_tokenizer, maxlen=maxlen):

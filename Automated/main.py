@@ -31,4 +31,4 @@ ChangePointAnalysis.changepointanalysis(subreddits)
 
 # Compute classifier stuff
 print('Training the neural nets:')
-CreateNeuralNets.buildnets(subreddits)
+nn_results = CreateNeuralNets.buildnets(subreddits)

@@ -17,7 +17,7 @@ from ChangePointAnalysis import BayesianMethods, Preprocess, PopularWords
 #os.chdir("../")
 
 
-def compute_changepoints(subreddit = "Jokes", up_to = None, daily_words = 2, method = "Metropolis", steps = 300000, tune = 5000):
+def compute_changepoints(subreddit = "Jokes", up_to = None, daily_words = 2, method = "Metropolis", steps = 30000, tune = 5000):
     starting_dir = os.getcwd()
     subreddit_path = f"../Data/subreddit_{subreddit}/"
 
@@ -28,13 +28,6 @@ def compute_changepoints(subreddit = "Jokes", up_to = None, daily_words = 2, met
     with open("mcmc_config.txt") as file:
         contents = file.read()
         exec(contents)
-
-    up_to = None # Default is None.
-    daily_words = 2
-    method = "Metropolis"
-    steps = 30000
-    tune = 5000
-
 
     pop_words = PopularWords.popular_words_unioned_each_date(df, daily_words)
 
@@ -55,10 +48,13 @@ def compute_changepoints(subreddit = "Jokes", up_to = None, daily_words = 2, met
         data = BayesianMethods.bayesian_optional_change_point(df, keyword = word, statistic = 'count', plot = False, method = method, steps = steps, tune = tune)
         # for readability, this should be packaged as a dictionary
         timeseries_df = data[0]
+        timeseries_df = timeseries_df.rename( columns = {"tau" : "change point guess",word : "\"" + word + "\""})
         timeseries_df.plot()
         plt.ylim(0,1)
+        plt.ylabel("Proportion of posts containing this word")
         plt.xticks(rotation=90)
         plt.savefig(f"ChangePoint_{word}.png")
+        plt.title(f"p = {data[-1]}")
 
         trace = data[1]
         mu_1 = BayesianMethods.beta_mean( trace['alpha_1'],  trace['beta_1']  )
@@ -82,7 +78,7 @@ def compute_changepoints(subreddit = "Jokes", up_to = None, daily_words = 2, met
     results_df.to_csv("../results.csv")
     os.chdir(starting_dir)
 
-def changepointanalysis(subreddits = ["Jokes", "WallStreetBets", "WritingPrompts",  "TraditionalCurses", "TwoSentenceHorror"]):
+def changepointanalysis(subreddits = ["Jokes", "WallStreetBets", "WritingPrompts",  "TraditionalCurses", "TwoSentenceHorror"], up_to = None, daily_words = 2, method = "Metropolis", steps = 30000, tune = 5000):
     for subreddit in subreddits:
         print("working on ", subreddit)
         compute_changepoints(subreddit)
