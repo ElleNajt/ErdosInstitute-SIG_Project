@@ -1,6 +1,9 @@
 # Erdos Institute SIG Project
-Bootcamp Project For Erdos Institute
+Bootcamp Project For [Erdos Institute](https://www.erdosinstitute.org/).
 
+This is inspired by a project suggestion provided by Susquehanna International Group (SIG).
+
+# Project description:
 Our project is a data analysis pipeline with the following steps:
 
 1. Given a subreddit and a time period, it downloads all submissions made to that subreddit during that time period.
