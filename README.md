@@ -1,7 +1,7 @@
 # Erdos Institute SIG Project
 Bootcamp Project For [Erdos Institute](https://www.erdosinstitute.org/).
 
-This is inspired by a project suggestion provided by Susquehanna International Group (SIG).
+This is inspired by a project suggestion provided to the Erdos institute by Susquehanna International Group (SIG).
 
 # Project description:
 Our project is a data analysis pipeline with the following steps:
