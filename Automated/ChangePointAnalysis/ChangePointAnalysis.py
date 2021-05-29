@@ -81,6 +81,6 @@ def compute_changepoints(subreddit = "Jokes", up_to = None, daily_words = 2, met
 def changepointanalysis(subreddits = ["Jokes", "WallStreetBets", "WritingPrompts",  "TraditionalCurses", "TwoSentenceHorror"], up_to = None, daily_words = 2, method = "Metropolis", steps = 30000, tune = 5000):
     for subreddit in subreddits:
         print("working on ", subreddit)
-        compute_changepoints(subreddit)
+        compute_changepoints(subreddit, up_to = None, daily_words = 2, method = "Metropolis", steps = 30000, tune = 5000)
 
 #changepointanalysis()
