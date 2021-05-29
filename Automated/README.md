@@ -1,5 +1,9 @@
 # Automated Process
 
+In order to use this code, please go to http://nlp.stanford.edu/data/glove.6B.zip, download the .zip file, and extract its contents to the Data folder. 
+
+Then run main.py.
+
 main.py does the following:
 
 Loads the list of subreddits from config.txt. For each subreddit, it:

@@ -1,6 +1,9 @@
 # Erdos Institute SIG Project
-Bootcamp Project For Erdos Institute
+Bootcamp Project For [Erdos Institute](https://www.erdosinstitute.org/).
 
+This is inspired by a project suggestion provided by Susquehanna International Group (SIG).
+
+# Project description:
 Our project is a data analysis pipeline with the following steps:
 
 1. Given a subreddit and a time period, it downloads all submissions made to that subreddit during that time period.
@@ -28,3 +31,5 @@ We are indebted to the following sources:
 
 1. https://minimaxir.com/2017/06/reddit-deep-learning/
 2. Probabilistic Programming & Bayesian Methods for Hackers by Cameron Davidson-Pilon
+
+We would like to thank our mentors and teachers from the Erdös Institute, especially Lauren Fink, Lindsay Warrenburg and Matt Osborne. We would also like to thank Roman Holowinsky for organizing the Erdös institute, and his tireless efforts for its cause.
