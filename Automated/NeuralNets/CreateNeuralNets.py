@@ -41,6 +41,7 @@ from keras.layers import Dense, Embedding, GlobalAveragePooling1D, concatenate, 
 from keras.layers.core import Masking, Dropout, Reshape
 from keras.layers.normalization import BatchNormalization
 from keras.callbacks import EarlyStopping
+from matplotlib import pyplot as plt
 
 from sklearn.model_selection import train_test_split
 
