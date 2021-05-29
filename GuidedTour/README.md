@@ -1,1 +1,1 @@
-Guided tour of the data set and our approaches to it.
+The notebook contains a guided tour of our program.
