@@ -47,6 +47,12 @@ def compute_changepoints(subreddit = "Jokes", up_to = None, daily_words = 2, met
         print('working on', word)
         data = BayesianMethods.bayesian_optional_change_point(df, keyword = word, statistic = 'count', plot = False, method = method, steps = steps, tune = tune)
         # for readability, this should be packaged as a dictionary
+
+
+        trace = data[1]
+        mu_1 = BayesianMethods.beta_mean( trace['alpha_1'],  trace['beta_1']  )
+        mu_2 = BayesianMethods.beta_mean( trace['alpha_2'],  trace['beta_2']  )
+
         timeseries_df = data[0]
         timeseries_df = timeseries_df.rename( columns = {"tau" : "change point guess",word : "\"" + word + "\""})
         timeseries_df.plot()
@@ -54,11 +60,8 @@ def compute_changepoints(subreddit = "Jokes", up_to = None, daily_words = 2, met
         plt.ylabel("Proportion of posts containing this word")
         plt.xticks(rotation=90)
         plt.savefig(f"ChangePoint_{word}.png")
-        plt.title(f"p = {data[-1]}")
+        plt.title(f"p = {data[-1]}, mu_2 - mu_1 = {int(1000*mu_2 - mu_1)/1000}")
 
-        trace = data[1]
-        mu_1 = BayesianMethods.beta_mean( trace['alpha_1'],  trace['beta_1']  )
-        mu_2 = BayesianMethods.beta_mean( trace['alpha_2'],  trace['beta_2']  )
 
         results_word = { "change_point_confidence" : data[-1],  "mus": (mu_1, mu_2), "mu_diff" : mu_2 - mu_1, "tau_map" : str(data[3]) , "tau_std" : np.std(data[1]['tau']) , "entropy" : BayesianMethods.entropy(data[0]['tau'])}
         results_word["change_point_guess" ] = data[4]
@@ -81,6 +84,6 @@ def compute_changepoints(subreddit = "Jokes", up_to = None, daily_words = 2, met
 def changepointanalysis(subreddits = ["Jokes", "WallStreetBets", "WritingPrompts",  "TraditionalCurses", "TwoSentenceHorror"], up_to = None, daily_words = 2, method = "Metropolis", steps = 30000, tune = 5000):
     for subreddit in subreddits:
         print("working on ", subreddit)
-        compute_changepoints(subreddit, up_to = None, daily_words = 2, method = "Metropolis", steps = 30000, tune = 5000)
+        compute_changepoints(subreddit, up_to = up_to, daily_words = daily_words, method = "Metropolis", steps = steps, tune = tune)
 
 #changepointanalysis()
