@@ -146,17 +146,17 @@ def PostClassificationModel(data_path, embeddings_path = embeddings_path, custom
     print("Starting Post Classification Model.")
     #if data_path is a string, read in the corresponding file as df. Otherwise we assume it's a pandas dataframe
     if type(data_path) == str:
-        df = pd.read_pickle(data_path + "/full.pkl")
+        df = pd.read_csv(data_path + "/full.csv")
     else:
         df = data_path.copy()
 
     #change_point_information = pd.read_csv(data_path + "/Changepoints/results.csv")
 
-    print("size-2", len(df))
+
     #drop irrelevant data points
 
     df=DataSetup(df, exclude_removed=exclude_removed, drop_na_cols=text_cols_used)
-    print("size-1", len(df))
+
     time_features = ['minute','hour','dayofweek', 'dayofyear' ]
     binary_features = ['year']
 
@@ -187,8 +187,7 @@ def PostClassificationModel(data_path, embeddings_path = embeddings_path, custom
     text_padded_cols = text_padded.columns
     features = list(text_padded_cols) + time_features + binary_features
     other_cols = time_features + binary_features
-    print('features', features)
-    print("size0", len(df))
+
     df = pd.concat([df, pd.DataFrame(text_padded)], axis = 1)
     #print('after padding', 472 in df.index)
     #print(df.columns)
@@ -266,15 +265,15 @@ def PostClassificationModel(data_path, embeddings_path = embeddings_path, custom
 
 
     # permute the rows because of how keras takes the validation set from the end
-    print("size1", len(df))
+
     df = df.sample(frac = 1, random_state = custom_seed)
 
     features_df = df[features]
     target = 'is_top_submission'
     target_df = df[target]
-    print("size2", len(df))
+
     train_X,  test_X, train_y, test_y = train_test_split(features_df, target_df, test_size=test_size, random_state=custom_seed)
-    print(len(train_X), len(train_y), len(test_X), len(test_y))
+
     #set up early stopping
     earlyStopping = EarlyStopping(monitor=optimization_quantity[0], min_delta=0, patience=early_stopping_patience, verbose=0, mode=optimization_quantity[1], restore_best_weights=True)
 
@@ -291,7 +290,7 @@ def PostClassificationModel(data_path, embeddings_path = embeddings_path, custom
     #print(train_X)
     #print("converting")
     X_train = convert_df_for_keras(train_X, list(text_padded_cols), other_cols)
-    print(len(X_train))
+
 
     history = model.fit(X_train, [train_y, train_y], batch_size=batch_size,epochs=epochs,validation_split=split, callbacks=[earlyStopping])
 
@@ -303,8 +302,6 @@ def PostClassificationModel(data_path, embeddings_path = embeddings_path, custom
     #dc = DummyClassifier()
     #dc.fit( features_df, target_df)
     acc_to_beat=1-np.mean(target_df)
-    print("talk more about this")
-
     print(acc_to_beat)
     #print best validation accuracy
     print("The accuracy of the model on the validation set is: ")
