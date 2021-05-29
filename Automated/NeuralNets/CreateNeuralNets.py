@@ -60,7 +60,7 @@ def encode_text(text, word_tokenizer, maxlen=maxlen):
 
 def timeseries(df, text, model, word_tokenizer):
     #get the minimum year appearing in the data set
-    min_year = np.array(df.utc.apply(lambda x : x.year), dtype=int)
+    min_year = min(np.array(df.utc.apply(lambda x : x.year), dtype=int))
 
     df['date'] = df.utc.apply( lambda x : x.date())
     all_dates_utcs = df.date.unique()
@@ -73,10 +73,10 @@ def timeseries(df, text, model, word_tokenizer):
     input_minute = np.array([0])
 
     predict_list = []
-    for d in all_dates_utcs:
-        input_dayofweek = np.array([d.weekday()])
-        input_dayofyear = np.array([d.timetuple().tm_yday-1])
-        input_year = np.array([d.year-min_year])
+    for date in all_dates_utcs:
+        input_dayofweek = np.array([date.weekday()])
+        input_dayofyear = np.array([date.timetuple().tm_yday-1])
+        input_year = np.array([date.year-min_year])
         predict_list.append(model.predict([encoded_text, input_hour, input_dayofweek, input_minute, input_dayofyear, input_year])[0][0][0])
     plt.ylim(0,1)
     ax = plt.gca()

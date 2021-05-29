@@ -17,7 +17,7 @@ from ChangePointAnalysis import BayesianMethods, Preprocess, PopularWords
 #os.chdir("../")
 
 
-def compute_changepoints(subreddit = "Jokes"):
+def compute_changepoints(subreddit = "Jokes", up_to = None, daily_words = 2, method = "Metropolis", steps = 300000, tune = 5000):
     starting_dir = os.getcwd()
     subreddit_path = f"../Data/subreddit_{subreddit}/"
 
