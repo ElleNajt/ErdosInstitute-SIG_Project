@@ -14,7 +14,7 @@ meta_embedding_dims = 64 #dimension of the embedding for the time information
 dense_layer_size = 256 #size of the final dense layer in the NN
 text_cols_used=['title'] #which text columns to use
 exclude_removed = True #exclude removed and deleted posts from the data set
-use_year = False #whether to include the year in the calculation
+use_year = True #whether to include the year in the calculation
 split = 0.25 #percent of training set to use for validation
 test_size = 0.2 #percent of data set to use for testing
 optimization_quantity = ['val_main_out_accuracy','max'] #we want to maximize the accuracy on the validation set
@@ -47,10 +47,44 @@ from sklearn.model_selection import train_test_split
 def buildnets(subreddits):
     for subreddit in subreddits:
         data_path = f'../Data/subreddit_{subreddit}'
-        model, accuracies = PostClassificationModel(data_path = data_path, use_year = True)
+        model, accuracies, word_tokenizer, cleaned_df = PostClassificationModel(data_path = data_path, use_year = True)
 
         #save model
         model.save( f'../Data/subreddit_{subreddit}/NN_model.keras')
+
+
+#For predicting time series of post popularity.
+def encode_text(text, word_tokenizer, maxlen=maxlen):
+    encoded = word_tokenizer.texts_to_sequences([text])
+    return sequence.pad_sequences(encoded, maxlen=maxlen)
+
+def timeseries(df, text, model, word_tokenizer):
+    #get the minimum year appearing in the data set
+    min_year = np.array(df.utc.apply(lambda x : x.year), dtype=int)
+
+    df['date'] = df.utc.apply( lambda x : x.date())
+    all_dates_utcs = df.date.unique()
+
+    #all_dates_utc = [datetime.datetime.(x[0]+min_year,1,1) + datetime.timedelta(x[1]) for x in all_dates]
+    encoded_text = encode_text(text,word_tokenizer)
+
+    # Fixing a specific time for input on each day
+    input_hour = np.array([12])
+    input_minute = np.array([0])
+
+    predict_list = []
+    for d in all_dates_utcs:
+        input_dayofweek = np.array([d.weekday()])
+        input_dayofyear = np.array([d.timetuple().tm_yday-1])
+        input_year = np.array([d.year-min_year])
+        predict_list.append(model.predict([encoded_text, input_hour, input_dayofweek, input_minute, input_dayofyear, input_year])[0][0][0])
+    plt.ylim(0,1)
+    ax = plt.gca()
+    for tick in ax.get_xticklabels():
+        tick.set_rotation(45)
+    plt.xlabel("Date")
+    plt.ylabel("Probability of Success")
+    plt.scatter(all_dates_utcs, predict_list)
 
 #returns 1 if ups>threshold, 0 otherwise
 def GoodPost(ups,threshold=1):
@@ -284,4 +318,4 @@ def PostClassificationModel(data_path, embeddings_path = embeddings_path, custom
     print(acc_on_test)
 
     #return the model and the accuracy information
-    return model, [acc_to_beat, acc_on_val, acc_on_test]
+    return model, [acc_to_beat, acc_on_val, acc_on_test], word_tokenizer, df

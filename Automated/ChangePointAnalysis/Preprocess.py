@@ -44,13 +44,14 @@ def preprocess(df):
     return sub_df
 
 def load_and_preprocess(dataframe_path):
-    preprocessed_location = dataframe_path + "changepoint_preprocessed.pkl"
+    preprocessed_location = dataframe_path + "changepoint_preprocessed.csv"
     if os.path.exists(preprocessed_location):
-        return pd.read_pickle(preprocessed_location)
+        return pd.read_csv(preprocessed_location)
     else:
         print("Did not find preprocessed version, preprocessing. (This will only be done once.)")
-        df = pd.read_pickle(dataframe_path + "full.pkl")
+        #df = pd.read_pickle(dataframe_path + "full.pkl")
+        df = pd.read_csv(dataframe_path + "full.csv")
         preprocessed = preprocess(df)
-        preprocessed.to_pickle(preprocessed_location)
-
+        #preprocessed.to_pickle(preprocessed_location)
+        preprocessed.to_csv(preprocessed_location)
     return preprocessed

@@ -14,7 +14,7 @@ import json
 import sys
 import time
 import os
-
+import time
 
 
 with open("API.env") as file:
@@ -109,9 +109,17 @@ def get_all_submissions(start_time, end_time, subreddit):
     # Because there are some days that pushshift disagrees with praw, I changed the code to just get the submissions
     # ids from pushshift, and then to download the data from PRAW.
     praw_submissions = []
-    for submission in reddit.info(ids2): # Makes a single call to the PRAW API, much faster than doing them one by one.
-        praw_submissions.append(extract_data(submission))
 
+    PRAW_returned_data = False
+    while not PRAW_returned_data:
+        try:
+            for submission in reddit.info(ids2): # Makes a single call to the PRAW API, much faster than doing them one by one.
+                praw_submissions.append(extract_data(submission))
+                PRAW_returned_data = True
+        except:
+            print("Unexpected error:", sys.exc_info()[0])
+            print("Sleeping.")
+            time.sleep(10)
     praw_df = pd.DataFrame(praw_submissions)
     print(f"PRAW found {len(praw_df)} submissions.")
     return praw_df
@@ -139,4 +147,5 @@ def scrape_data(subreddits = ["Stocks", "Stonks" ], start = dt.datetime(2020, 1,
             window_left += delta
             window_right += delta
 
-        subreddit_df.to_pickle(f"../Data/subreddit_{subreddit}/full.pkl")
+        #subreddit_df.to_pickle(f"../Data/subreddit_{subreddit}/full.pkl")
+        subreddit_df.to_csv(f"../Data/subreddit_{subreddit}/full.csv")
