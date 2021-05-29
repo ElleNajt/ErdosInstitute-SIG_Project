@@ -5,8 +5,8 @@ Our project is a data analysis pipeline with the following steps:
 
 1. Given a subreddit and a time period, it downloads all submissions made to that subreddit during that time period.
 2. It then finds words that were popular on any day during that period, and then uses pymc3 to find changepoints in the time series of the frequency of posts that contain them. This gives insight into culture shifts.
-3. It then trains a neural net to classify whether a post achieves more than the median number of posts. Because shifts in culture influence what becomes successful, this neural net uses the change points we discovered to guide its training.
-4. That neural net can then be used to workshop a post, or to understand which posts may become popular. 
+3. It then trains a neural net to classify whether a post achieves more than the median number of posts. 
+4. That neural net can then be used to workshop a post or to understand which posts may become popular. 
 
 # Folders:
 
